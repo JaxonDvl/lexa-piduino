@@ -5,9 +5,26 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var server = require('http').Server(app);
-server.listen(5000);
-var firebase = require('firebase');
+server.listen(3000);
 
+var onoff = require('onoff');
+var Gpio = onoff.Gpio;
+var led = new Gpio(18, 'out');
+var io = require('socket.io-client');
+var socket = io.connect('http://lexa.tuscale.ro');
+
+socket.on('message', function(msg) {
+  console.log('Got a new message from the router:', msg);
+  var jMsg = JSON.parse(msg);
+  var newLedState = jMsg.led;
+
+ led.writeSync(newLedState);
+});
+
+
+
+
+var firebase = require('firebase');
 var io = require('socket.io')(server);
 var firebase_app = firebase.initializeApp({
     apiKey: "AIzaSyB3ZvJDuZ2HD-UppgPvY2by-GI0KnessXw",
@@ -18,39 +35,45 @@ var firebase_app = firebase.initializeApp({
     messagingSenderId: "161670508523"
 });
 var db = firebase.database();
+
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.get('/', function (req, res) {
     res.send('Hello World!');
-
 });
 var SerialPort = require('serialport');
- SerialPort.list(function (err, ports) {
-     ports.forEach(function (port) {
-         //console.log(port.comName);
-     });
- });
- var port = new SerialPort('/dev/ttyACM0', {
-     baudRate: 9600,
-     parser: SerialPort.parsers.readline("\n")
- });
- port.on('open', function () {
-     console.log('open');
- });
-     //port.on('data', function (data) {
-      //   console.log(data);
-
-        // socket.emit('idscanned', { cardid: data });
-     //});
-io.on('connection', function (socket) {
-     console.log('connected');
-     port.on('data', function (data) {
-         console.log(data);
-
-         socket.emit('idscanned', { cardid: data });
-     });
+SerialPort.list(function (err, ports) {
+    ports.forEach(function (port) {
+        console.log(port.comName);
+    });
 });
+var port = new SerialPort('/dev/ttyACM0', {
+    baudRate: 9600,
+    parser: SerialPort.parsers.readline("\n")
+});
+port.on('open', function () {
+    console.log('open');
+});
+
+io.on('connection', function (socket) {
+    console.log('connected');
+    port.on('data', function (data) {
+        console.log(data);
+        var tagID = data.split(' ').join('');
+        db.ref("card/" + tagID).on("once", function(cardOwnerSnap) {
+            var cardOwnerName = cardOwnerSnap.child('name').val();
+
+            if (cardOwnerName) {
+                db.ref('authed').set(cardOwnerName);
+            }
+        });
+        socket.emit('idscanned', { cardid: tagID });
+
+    });
+});
+
+
 
 app.post('/add_user', function (req, res) {
     var currentUser = { name: req.body.name, password: req.body.password, id: req.body.id };
@@ -68,4 +91,10 @@ app.get('/get_users', function (req, res) {
         
     })
 
+});
+
+process.on('SIGINT', function () {
+  led.writeSync(0);
+  led.unexport();
+  process.exit();
 });
