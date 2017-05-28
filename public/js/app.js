@@ -14,7 +14,7 @@ $(document).ready(function () {
         });
         console.log('clicked submit', name, password);
     });
-    var socket = io.connect('http://localhost:3000');
+    var socket = io.connect('http://192.168.0.105:5000');
 
     socket.on('idscanned', function (data) {
         if (data.cardid.substring(0, 4) === "LOFF") {

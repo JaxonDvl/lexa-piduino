@@ -5,7 +5,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var server = require('http').Server(app);
-server.listen(3000);
+server.listen(5000);
 var firebase = require('firebase');
 
 var io = require('socket.io')(server);
@@ -26,29 +26,30 @@ app.get('/', function (req, res) {
 
 });
 var SerialPort = require('serialport');
-// SerialPort.list(function (err, ports) {
-//     ports.forEach(function (port) {
-//         console.log(port.comName);
-//     });
-// });
-// var port = new SerialPort('COM5', {
-//     baudRate: 9600,
-//     parser: SerialPort.parsers.readline("\n")
-// });
-// port.on('open', function () {
-//     console.log('open');
-// });
+ SerialPort.list(function (err, ports) {
+     ports.forEach(function (port) {
+         //console.log(port.comName);
+     });
+ });
+ var port = new SerialPort('/dev/ttyACM0', {
+     baudRate: 9600,
+     parser: SerialPort.parsers.readline("\n")
+ });
+ port.on('open', function () {
+     console.log('open');
+ });
+     //port.on('data', function (data) {
+      //   console.log(data);
 
+        // socket.emit('idscanned', { cardid: data });
+     //});
 io.on('connection', function (socket) {
-    // console.log('connected');
-    // port.on('data', function (data) {
-    //     console.log(data);
+     console.log('connected');
+     port.on('data', function (data) {
+         console.log(data);
 
-    // //     // port.write("B");
-    // //     // if(data[0]==="L") {
-    //     socket.emit('idscanned', { cardid: data });
-    //     // }
-    // });
+         socket.emit('idscanned', { cardid: data });
+     });
 });
 
 app.post('/add_user', function (req, res) {
