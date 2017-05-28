@@ -1,29 +1,26 @@
-/**
- * Created by Jaxxo on 22/01/2017.
- */
+// Init express server
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var server = require('http').Server(app);
 server.listen(3000);
 
+// Subscribe to lexa's router stream and update the LED accordingly
 var onoff = require('onoff');
 var Gpio = onoff.Gpio;
 var led = new Gpio(18, 'out');
-var io = require('socket.io-client');
-var socket = io.connect('http://lexa.tuscale.ro');
+var sio = require('socket.io-client');
+var socket = sio.connect('http://lexa.tuscale.ro');
 
 socket.on('message', function(msg) {
   console.log('Got a new message from the router:', msg);
   var jMsg = JSON.parse(msg);
   var newLedState = jMsg.led;
 
- led.writeSync(newLedState);
+  led.writeSync(newLedState);
 });
 
-
-
-
+// Init firebase
 var firebase = require('firebase');
 var io = require('socket.io')(server);
 var firebase_app = firebase.initializeApp({
@@ -39,9 +36,8 @@ var db = firebase.database();
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.get('/', function (req, res) {
-    res.send('Hello World!');
-});
+
+// Init NFC serial link
 var SerialPort = require('serialport');
 SerialPort.list(function (err, ports) {
     ports.forEach(function (port) {
@@ -56,25 +52,29 @@ port.on('open', function () {
     console.log('open');
 });
 
-io.on('connection', function (socket) {
-    console.log('connected');
-    port.on('data', function (data) {
-        console.log(data);
-        var tagID = data.split(' ').join('');
-        db.ref("card/" + tagID).on("once", function(cardOwnerSnap) {
-            var cardOwnerName = cardOwnerSnap.child('name').val();
+// Monitor NFC activity
+port.on('data', function (data) {
+  var tagID = data.split(' ').join('');
+  tagID = tagID.substring(0, tagID.length - 1);
 
-            if (cardOwnerName) {
-                db.ref('authed').set(cardOwnerName);
-            }
-        });
-        socket.emit('idscanned', { cardid: tagID });
+  console.log(tagID + " scanned ...");
+  db.ref("card/" + tagID).once("value", function(cardOwnerSnap) {
+    var cardOwnerName = cardOwnerSnap.child('name').val();
 
-    });
+    if (cardOwnerName) {
+        db.ref('authed').set(cardOwnerName);
+    }
+  });
+  
+  // Notify our web-clients that a tag was scanned
+  io.sockets.emit('idscanned', { cardid: tagID });
 });
 
+io.on('connection', function (socket) {
+    console.log('Web client connected.');
+});
 
-
+// Define web-facing endpoints for managing the users
 app.post('/add_user', function (req, res) {
     var currentUser = { name: req.body.name, password: req.body.password, id: req.body.id };
     var updates = {};
@@ -87,12 +87,11 @@ app.post('/add_user', function (req, res) {
 app.get('/get_users', function (req, res) {
     firebase.database().ref().once('value',function (snap){
         var dataUsers= snap.child("users");
-        res.send(dataUsers);
-        
-    })
-
+        res.send(dataUsers);        
+    });
 });
 
+// Monitor process termination and do cleanups
 process.on('SIGINT', function () {
   led.writeSync(0);
   led.unexport();
