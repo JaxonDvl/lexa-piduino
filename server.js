@@ -12,12 +12,12 @@ var led = new Gpio(18, 'out');
 var sio = require('socket.io-client');
 var socket = sio.connect('http://lexa.tuscale.ro');
 
-socket.on('message', function(msg) {
-  console.log('Got a new message from the router:', msg);
-  var jMsg = JSON.parse(msg);
-  var newLedState = jMsg.led;
+socket.on('message', function (msg) {
+    console.log('Got a new message from the router:', msg);
+    var jMsg = JSON.parse(msg);
+    var newLedState = jMsg.led;
 
-  led.writeSync(newLedState);
+    led.writeSync(newLedState);
 });
 
 // Init firebase
@@ -54,20 +54,20 @@ port.on('open', function () {
 
 // Monitor NFC activity
 port.on('data', function (data) {
-  var tagID = data.split(' ').join('');
-  tagID = tagID.substring(0, tagID.length - 1);
+    var tagID = data.split(' ').join('');
+    tagID = tagID.substring(0, tagID.length - 1);
 
-  console.log(tagID + " scanned ...");
-  db.ref("card/" + tagID).once("value", function(cardOwnerSnap) {
-    var cardOwnerName = cardOwnerSnap.child('name').val();
+    console.log(tagID + " scanned ...");
+    db.ref("card/" + tagID).once("value", function (cardOwnerSnap) {
+        var cardOwnerName = cardOwnerSnap.child('name').val();
 
-    if (cardOwnerName) {
-        db.ref('authed').set(cardOwnerName);
-    }
-  });
-  
-  // Notify our web-clients that a tag was scanned
-  io.sockets.emit('idscanned', { cardid: tagID });
+        if (cardOwnerName) {
+            db.ref('authed').set(cardOwnerName);
+        }
+    });
+
+    // Notify our web-clients that a tag was scanned
+    io.sockets.emit('idscanned', { cardid: tagID });
 });
 
 io.on('connection', function (socket) {
@@ -85,15 +85,15 @@ app.post('/add_user', function (req, res) {
     return firebase.database().ref().update(updates);
 });
 app.get('/get_users', function (req, res) {
-    firebase.database().ref().once('value',function (snap){
-        var dataUsers= snap.child("users");
-        res.send(dataUsers);        
+    firebase.database().ref().once('value', function (snap) {
+        var dataUsers = snap.child("users");
+        res.send(dataUsers);
     });
 });
 
 // Monitor process termination and do cleanups
 process.on('SIGINT', function () {
-  led.writeSync(0);
-  led.unexport();
-  process.exit();
+    led.writeSync(0);
+    led.unexport();
+    process.exit();
 });
