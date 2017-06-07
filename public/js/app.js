@@ -14,7 +14,7 @@ $(document).ready(function () {
         });
         console.log('clicked submit', name, password);
     });
-    var socket = io.connect('http://127.0.0.1:3000');
+    var socket = io.connect('http://raspberrydia.local:3000/');
 
     socket.on('idscanned', function (data) {
         if (data.cardid.substring(0, 4) === "LOFF") {
@@ -41,17 +41,4 @@ $(document).ready(function () {
         })
         
     }
-    // function getUserAccount(userid) {
-    //     return axios.get('/getuser?id='+userid)
-    //             .then(function(response){
-    //                 if(response.data===''){
-
-    //                     console.log('user not exists');
-    //                 } else{
-    //                     $rfidwrapper.html("User already exists");
-    //                     $rfidwrapper.css('color', '#f4ad42');
-    //                     console.log(response);
-    //                 }
-    //     });
-    // }
 });
