@@ -7,19 +7,19 @@ server.listen(3000);
 console.log("started listenning on port 3000");
 
 // Subscribe to lexa's router stream and update the LED accordingly
-var onoff = require('onoff');
-var Gpio = onoff.Gpio;
-var led = new Gpio(18, 'out');
+// var onoff = require('onoff');
+// var Gpio = onoff.Gpio;
+// var led = new Gpio(18, 'out');
 var sio = require('socket.io-client');
 var socket = sio.connect('http://lexa.tuscale.ro');
 
-socket.on('message', function(msg) {
-  console.log('Got a new message from the router:', msg);
-  var jMsg = JSON.parse(msg);
-  var newLedState = jMsg.led;
+// socket.on('message', function(msg) {
+//   console.log('Got a new message from the router:', msg);
+//   var jMsg = JSON.parse(msg);
+//   var newLedState = jMsg.led;
 
-  led.writeSync(newLedState);
-});
+//   led.writeSync(newLedState);
+// });
 
 // Init firebase
 var firebase = require('firebase');
@@ -34,44 +34,43 @@ var firebase_app = firebase.initializeApp({
 });
 var db = firebase.database();
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Init NFC serial link
-var SerialPort = require('serialport');
-SerialPort.list(function (err, ports) {
-    ports.forEach(function (port) {
-        console.log(port.comName);
-    });
-});
-var port = new SerialPort('/dev/ttyACM0', {
-    baudRate: 9600,
-    parser: SerialPort.parsers.readline("\r\n")
-});
-port.on('open', function () {
-    console.log('open');
-});
+// var SerialPort = require('serialport');
+// SerialPort.list(function (err, ports) {
+//     ports.forEach(function (port) {
+//         console.log(port.comName);
+//     });
+// });
+// var port = new SerialPort('/dev/ttyACM0', {
+//     baudRate: 9600,
+//     parser: SerialPort.parsers.readline("\r\n")
+// });
+// port.on('open', function () {
+//     console.log('open');
+// });
 
-// Monitor NFC activity
-port.on('data', function (data) {
-  var tagID = data.split(' ').join('');
-  console.log(data.split(' '));
+// // Monitor NFC activity
+// port.on('data', function (data) {
+//   var tagID = data.split(' ').join('');
+//   console.log(data.split(' '));
+//   tagID = tagID.substring(0, tagID.length - 1);
 
-  console.log(tagID + " scanned ...");
-  db.ref("card/" + tagID).once("value", function(cardOwnerSnap) {
-    var cardOwnerName = cardOwnerSnap.child('name').val();
-    console.log(cardOwnerName);
-    var updates ={};
-    if (cardOwnerName) {
-        updates['authed/'+cardOwnerName] = true;
-        db.ref().update(updates);
-    }
-  });
+//   console.log(tagID + " scanned ...");
+//   db.ref("card/" + tagID).once("value", function(cardOwnerSnap) {
+//     var cardOwnerName = cardOwnerSnap.child('name').val();
+
+//     if (cardOwnerName) {
+//         db.ref('authed').set(cardOwnerName);
+//     }
+//   });
   
-  // Notify our web-clients that a tag was scanned
-  io.sockets.emit('idscanned', { cardid: tagID });
-});
+//   // Notify our web-clients that a tag was scanned
+//   io.sockets.emit('idscanned', { cardid: tagID });
+// });
 
 io.on('connection', function (socket) {
     console.log('Web client connected.');
@@ -96,8 +95,8 @@ app.get('/get_users', function (req, res) {
 });
 
 // Monitor process termination and do cleanups
-process.on('SIGINT', function () {
-  led.writeSync(0);
-  led.unexport();
-  process.exit();
-});
+// process.on('SIGINT', function () {
+//   led.writeSync(0);
+//   led.unexport();
+//   process.exit();
+// });
