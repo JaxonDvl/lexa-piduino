@@ -18,7 +18,8 @@ $(document).ready(function () {
     // var socket = io.connect('http://127.0.0.1:3000/');
 
     socket.on('idscanned', function (data) {
-        if (!data.cardid) {
+        console.log(data);
+        if (data.cardid) {
             $rfidwrapper.html("Active Card");
             $rfidwrapper.css('color', 'green');
             data.cardid = data.cardid.split(' ').join('');
