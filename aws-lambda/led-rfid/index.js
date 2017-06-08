@@ -24,38 +24,46 @@ exports.handler = function (event, context, callback) {
 };
 
 var handlers = {
-    'TestIntent': function () {
+    'LedIntent': function () {
         var that = this;
         var ledStateSlot = this.event.request.intent.slots.NewLedState;
+        var userStateSlot = this.event.request.intent.slots.UserState;
         var stateName;
         if (ledStateSlot && ledStateSlot.value) {
             stateName = ledStateSlot.value.toLowerCase();
         }
+        var name;
+         if (userStateSlot && userStateSlot.value) {
+            name = userStateSlot.value.toLowerCase();
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+        }
+        // slot user
 
-        db.ref('authed').once('value', function (snap) {
-            var lastScannedTagOwner = snap.val();
-
-            if (lastScannedTagOwner) {
-                // Valid tag present
+        // check if it exists as authed if not try again
+        db.ref().once('value', function (snap) {
+            var isUserLogged = snap.child("authed/"+name).val();
+            if (isUserLogged) {
+                var userLed = snap.child("users/"+name+"/led").val();
                 request({
                     url: 'http://lexa.tuscale.ro/publish',
                     method: 'POST',
-                    json: { led: (stateName === "on" ? 1 : 0) }
+                    json: {
+                         led: (stateName === "on" ? 1 : 0), 
+                         userLed:userLed
+                        }
                 },
                     function (error, response, body) {
                         if (error) {
                             return console.error('upload failed:', error);
                         }
-
-                        // Delete scanned tag and notify user of successfull op
-                        db.ref('authed').remove();
-                        that.emit(':tell', 'Hi ' + lastScannedTagOwner + '! Turning ' + stateName + ' the LED!');
+                        that.emit(':tell', 'Hi ' + name + '! Turning ' + stateName + ' the LED!');
                         console.log('Upload successful!  Server responded with:', body)
                     }
                 );
             } else {
-                that.emit(':tell', 'Please scan your tag and try again.');
+                that.emit(':tell', 'If you completed the registration, please scan your tag and try again.');
             }
-        });
+        })
+
     }
 };

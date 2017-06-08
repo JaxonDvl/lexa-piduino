@@ -67,7 +67,7 @@ app.use(bodyParser.json());
 //         db.ref('authed').set(cardOwnerName);
 //     }
 //   });
-  
+
 //   // Notify our web-clients that a tag was scanned
 //   io.sockets.emit('idscanned', { cardid: tagID });
 // });
@@ -88,15 +88,54 @@ app.post('/add_user', function (req, res) {
     return firebase.database().ref().update(updates);
 });
 app.get('/get_users', function (req, res) {
-    firebase.database().ref().once('value',function (snap){
-        var dataUsers= snap.child("users");
-        res.send(dataUsers);        
+    firebase.database().ref().once('value', function (snap) {
+        var dataUsers = snap.child("users");
+        res.send(dataUsers);
     });
 });
+app.get('/get_authed', function (req, res) {
+    db.ref().once('value', function (snap) {
+        var isUserLogged = snap.child("authed/Mike").val();
+        console.log(isUserLogged);
+        if (isUserLogged) {
+            var userData = snap.child("users/Mike/led")
+            console.log(parseInt(userData.val()));
+        }
+    })
+    var name = "BLAH";
+    name = name.toLowerCase();
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    res.send(name);
 
+});
 // Monitor process termination and do cleanups
 // process.on('SIGINT', function () {
 //   led.writeSync(0);
 //   led.unexport();
 //   process.exit();
 // });
+        // db.ref('authed').once('value', function (snap) {
+        //     var lastScannedTagOwner = snap.val();
+
+        //     if (lastScannedTagOwner) {
+        //         // Valid tag present
+        //         request({
+        //             url: 'http://lexa.tuscale.ro/publish',
+        //             method: 'POST',
+        //             json: { led: (stateName === "on" ? 1 : 0) }
+        //         },
+        //             function (error, response, body) {
+        //                 if (error) {
+        //                     return console.error('upload failed:', error);
+        //                 }
+
+        //                 // Delete scanned tag and notify user of successfull op
+        //                 db.ref('authed').remove();
+        //                 that.emit(':tell', 'Hi ' + lastScannedTagOwner + '! Turning ' + stateName + ' the LED!');
+        //                 console.log('Upload successful!  Server responded with:', body)
+        //             }
+        //         );
+        //     } else {
+        //         that.emit(':tell', 'Please scan your tag and try again.');
+        //     }
+        // });

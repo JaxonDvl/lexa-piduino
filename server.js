@@ -9,7 +9,6 @@ console.log("started listenning on port 3000");
 // Subscribe to lexa's router stream and update the LED accordingly
 var onoff = require('onoff');
 var Gpio = onoff.Gpio;
-var led = new Gpio(18, 'out');
 var sio = require('socket.io-client');
 var socket = sio.connect('http://lexa.tuscale.ro');
 
@@ -17,7 +16,8 @@ socket.on('message', function(msg) {
   console.log('Got a new message from the router:', msg);
   var jMsg = JSON.parse(msg);
   var newLedState = jMsg.led;
-
+  var ledGpioOut = jMsg.userLed;
+  var led = new Gpio(ledGpioOut, 'out');
   led.writeSync(newLedState);
 });
 
