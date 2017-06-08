@@ -62,9 +62,8 @@ port.on('data', function (data) {
   console.log(tagID + " scanned ...");
   db.ref("card/" + tagID).once("value", function(cardOwnerSnap) {
     var cardOwnerName = cardOwnerSnap.child('name').val();
-
     if (cardOwnerName) {
-        db.ref('authed').set(cardOwnerName);
+        db.ref('authed').update(cardOwnerName);
     }
   });
   
@@ -78,10 +77,11 @@ io.on('connection', function (socket) {
 
 // Define web-facing endpoints for managing the users
 app.post('/add_user', function (req, res) {
-    var currentUser = { name: req.body.name, password: req.body.password, id: req.body.id };
+    var currentUser = { name: req.body.name, led: req.body.led, id: req.body.id };
     var updates = {};
     updates['card/' + currentUser.id] = {
-        name: currentUser.name
+        name: currentUser.name,
+        led: currentUser.led
     };
     updates['users/' + currentUser.name] = currentUser;
     return firebase.database().ref().update(updates);
