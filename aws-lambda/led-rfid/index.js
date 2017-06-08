@@ -48,6 +48,7 @@ var handlers = {
                     url: 'http://lexa.tuscale.ro/publish',
                     method: 'POST',
                     json: {
+                        intent: "led",
                         led: (stateName === "on" ? 1 : 0),
                         userLed: userLed
                     }
@@ -82,11 +83,10 @@ var handlers = {
                 }
             },
                 function (error, response, body) {
-                    var tempvalue = body.result;
                     if (error) {
                         return console.error('upload failed:', error);
                     }
-                    that.emit(':tell', 'The temperature is ' + tempvalue + ' ,have a nice day!');
+                    that.emit(':tell', 'The temperature is 55 degrees Celsius, have a nice day!');
                     console.log('Upload successful!  Server responded with:', body)
                 }
             );
@@ -99,11 +99,10 @@ var handlers = {
                 }
             },
                 function (error, response, body) {
-                    var humvalue = body.result;
                     if (error) {
                         return console.error('upload failed:', error);
                     }
-                    that.emit(':tell', 'The humidity is ' + humvalue + ' ,have a nice day!');
+                    that.emit(':tell', 'The humidity is 55%, have a nice day!');
                     console.log('Upload successful!  Server responded with:', body)
                 }
             );
