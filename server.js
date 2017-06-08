@@ -86,7 +86,8 @@ app.post('/add_user', function (req, res) {
         led: currentUser.led
     };
     updates['users/' + currentUser.name] = currentUser;
-    return firebase.database().ref().update(updates);
+    firebase.database().ref().update(updates);
+    res.send("added new user");
 });
 app.get('/get_users', function (req, res) {
     firebase.database().ref().once('value',function (snap){

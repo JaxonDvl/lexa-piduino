@@ -17,6 +17,7 @@
     "body-parser": "^1.16.0",
     "express": "^4.14.0",
     "firebase": "^4.0.0",
+    "node-dht-sensor": "0.0.32",
     "nodemon": "^1.11.0",
     "onoff": "^1.1.2",
     "serialport": "^4.0.7",
