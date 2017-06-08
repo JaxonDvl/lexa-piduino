@@ -33,7 +33,7 @@ var handlers = {
             stateName = ledStateSlot.value.toLowerCase();
         }
         var name;
-         if (userStateSlot && userStateSlot.value) {
+        if (userStateSlot && userStateSlot.value) {
             name = userStateSlot.value.toLowerCase();
             name = name.charAt(0).toUpperCase() + name.slice(1);
         }
@@ -41,16 +41,16 @@ var handlers = {
 
         // check if it exists as authed if not try again
         db.ref().once('value', function (snap) {
-            var isUserLogged = snap.child("authed/"+name).val();
+            var isUserLogged = snap.child("authed/" + name).val();
             if (isUserLogged) {
-                var userLed = snap.child("users/"+name+"/led").val();
+                var userLed = snap.child("users/" + name + "/led").val();
                 request({
                     url: 'http://lexa.tuscale.ro/publish',
                     method: 'POST',
                     json: {
-                         led: (stateName === "on" ? 1 : 0), 
-                         userLed:userLed
-                        }
+                        led: (stateName === "on" ? 1 : 0),
+                        userLed: userLed
+                    }
                 },
                     function (error, response, body) {
                         if (error) {
@@ -65,5 +65,48 @@ var handlers = {
             }
         })
 
+    },
+    'SensorIntent': function () {
+        var that = this;
+        var sensorStateSlot = this.event.request.intent.slots.sensorState;
+        var sensorState;
+        if (sensorStateSlot && sensorStateSlot.value) {
+            sensorState = sensorStateSlot.value.toLowerCase();
+        }
+        if (sensorState === "temperature") {
+            request({
+                url: 'http://lexa.tuscale.ro/publish',
+                method: 'POST',
+                json: {
+                    intent: "temp"
+                }
+            },
+                function (error, response, body) {
+                    var tempvalue = body.result;
+                    if (error) {
+                        return console.error('upload failed:', error);
+                    }
+                    that.emit(':tell', 'The temperature is ' + tempvalue + ' ,have a nice day!');
+                    console.log('Upload successful!  Server responded with:', body)
+                }
+            );
+        } else {
+            request({
+                url: 'http://lexa.tuscale.ro/publish',
+                method: 'POST',
+                json: {
+                    intent: "hum"
+                }
+            },
+                function (error, response, body) {
+                    var humvalue = body.result;
+                    if (error) {
+                        return console.error('upload failed:', error);
+                    }
+                    that.emit(':tell', 'The humidity is ' + humvalue + ' ,have a nice day!');
+                    console.log('Upload successful!  Server responded with:', body)
+                }
+            );
+        }
     }
 };
