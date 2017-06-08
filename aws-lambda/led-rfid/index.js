@@ -86,7 +86,16 @@ var handlers = {
                     if (error) {
                         return console.error('upload failed:', error);
                     }
-                    that.emit(':tell', 'The temperature is 55 degrees Celsius, have a nice day!');
+                    db.ref().once('value', function (snap) {
+                        var temp = snap.child("sensor/temp").val();
+                        if (temp) {
+                            that.emit(':tell', 'The temperature is' + temp + ' degrees Celsius, have a nice day!');
+
+                        } else {
+                            that.emit(':tell', 'Sorry something went wrong either with the server or the sensor.');
+
+                        }
+                    });
                     console.log('Upload successful!  Server responded with:', body)
                 }
             );
@@ -102,7 +111,16 @@ var handlers = {
                     if (error) {
                         return console.error('upload failed:', error);
                     }
-                    that.emit(':tell', 'The humidity is 55%, have a nice day!');
+                    db.ref().once('value', function (snap) {
+                        var hum = snap.child("sensor/hum").val();
+                        if (hum) {
+                            that.emit(':tell', 'The humidity is' + hum + ' %, have a nice day!');
+
+                        } else {
+                            that.emit(':tell', 'Sorry something went wrong either with the server or the sensor.');
+
+                        }
+                    });
                     console.log('Upload successful!  Server responded with:', body)
                 }
             );

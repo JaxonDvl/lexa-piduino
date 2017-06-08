@@ -24,13 +24,19 @@ socket.on('message', function (msg) {
     } else if (jMsg.intent === "temp") {
         sensor.read(11, 4, function (err, temperature, humidity) {
             if (!err) {
-                console.log('temp: ' + temperature.toFixed(1) + '°C' );
+                // console.log('temp: ' + temperature.toFixed(1) + '°C' );
+                var updates = {};
+                updates['sensor/temp'] =  temperature.toFixed(1);
+                db.ref().update(updates);
             }
         });
     } else {
         sensor.read(11, 4, function (err, temperature, humidity) {
             if (!err) {
-                console.log('humidity: ' + humidity.toFixed(1) + '%');
+                var updates = {};
+                updates['sensor/hum'] =  humidity.toFixed(1);
+                db.ref().update(updates);
+                // console.log('humidity: ' + humidity.toFixed(1) + '%');
             }
         });
     }
